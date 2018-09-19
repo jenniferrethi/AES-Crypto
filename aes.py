@@ -44,6 +44,18 @@ def sub_bytes(arr):
       return arr
 
 
+def shift(i, row):
+      first_elems = row[0: i]
+      the_rest = row[i: len(row)]
+      new_arr = the_rest + first_elems
+      return new_arr
+
+def shift_row(arr):
+      for i in range(4):
+            arr[i] = shift(i, arr[i]) 
+      return arr;
+
+
 def main():
       s = "ABCDEFGHIJKLMNOP"
       b = bytearray()
@@ -55,12 +67,13 @@ def main():
             for j in range(4):
                   arr[i][j] = b[count]
                   count+=1
-      print(arr)
+      print("Original", arr)
 
       arr = sub_bytes(arr)
-      print(arr)
+      print("Sub bytes", arr)
       
-    
+      arr = shift_row(arr);
+      print("Shift Row", arr)
      
 
 if __name__ == '__main__':
