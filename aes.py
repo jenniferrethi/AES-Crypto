@@ -95,7 +95,7 @@ def galois_multiply(a, b):
 
 def matrix_multiplication(column):
       col = column
-      g_mult = self.galois_multiply
+      mult = self.galois_multiply
       column[0] = mult(col[0], gm[0][0]) ^ mult(col[1], gm[0][1]) ^ mult(col[2], gm[0][2]) ^ mult(col[3], gm[0][3])
       column[1] = mult(col[0], gm[1][0]) ^ mult(col[1], gm[1][1]) ^ mult(col[2], gm[1][2]) ^ mult(col[3], gm[1][3])
       column[2] = mult(col[0], gm[2][0]) ^ mult(col[1], gm[2][1]) ^ mult(col[2], gm[2][2]) ^ mult(col[3], gm[2][3])
@@ -109,18 +109,18 @@ def mix_columns(arr):
       mixed_columns = []
 
       for col in range(4):
-      column = []
-      mixed_col = []
-      for row in range(4):
-      column.append(arr[row][col])
-      mixed_columns[col] = matrix_multiplication(column)
+          column = []
+          mixed_col = []
+          for row in range(4):
+              column.append(arr[row][col])
+              mixed_columns[col] = matrix_multiplication(column)
 
       return map(list, zip(*mixed_columns))
 
 def matrix_multiplication_inv(column):
 
       col = column
-      g_mult = self.galois_multiply
+      mult = self.galois_multiply
       column[0] = mult(col[0], gm_inv[0][0]) ^ mult(col[1], gm_inv[0][1]) ^ mult(col[2], gm_inv[0][2]) ^ mult(col[3], gm_inv[0][3])
       column[1] = mult(col[0], gm_inv[1][0]) ^ mult(col[1], gm_inv[1][1]) ^ mult(col[2], gm_inv[1][2]) ^ mult(col[3], gm_inv[1][3])
       column[2] = mult(col[0], gm_inv[2][0]) ^ mult(col[1], gm_inv[2][1]) ^ mult(col[2], gm_inv[2][2]) ^ mult(col[3], gm_inv[2][3])
@@ -133,11 +133,11 @@ def mix_columns_inv(arr):
       mixed_columns = []
 
       for col in range(4):
-      column = []
-      mixed_col = []
-      for row in range(4):
-      column.append(arr[row][col])
-      mixed_columns[col] = matrix_multiplication_inv(column)
+          column = []
+          mixed_col = []
+          for row in range(4):
+              column.append(arr[row][col])
+              mixed_columns[col] = matrix_multiplication_inv(column)
 
       return map(list, zip(*mixed_columns))
 
