@@ -71,8 +71,30 @@ def galois_multiply(a, b):
         b >>= 1
     return p % 256
 
-def mix_columns(arr):
+def matrix_multiplication(column):
+      
+      col = column
+      g_mult = self.galois_multiply
+      column[0] = mult(col[0], gm[0][0]) ^ mult(col[1], gm[0][1]) ^ mult(col[2], gm[0][2]) ^ mult(col[3], gm[0][3])
+      column[1] = mult(col[0], gm[1][0]) ^ mult(col[1], gm[1][1]) ^ mult(col[2], gm[1][2]) ^ mult(col[3], gm[1][3])
+      column[2] = mult(col[0], gm[2][0]) ^ mult(col[1], gm[2][1]) ^ mult(col[2], gm[2][2]) ^ mult(col[3], gm[2][3]) 
+      column[3] = mult(col[0], gm[3][0]) ^ mult(col[1], gm[3][1]) ^ mult(col[2], gm[3][2]) ^ mult(col[3], gm[3][3]) 
 
+      return column
+
+
+def mix_columns(arr):
+      int col = 0
+      mixed_columns = []
+
+      for col in range(4):
+      column = []
+      mixed_col = []
+      for row in range(4):
+      column.append(arr[row][col])  
+      mixed_columns[col] = matrix_multiplication(column)
+
+      return map(list, zip(*mixed_columns))
 
 
 def main():
