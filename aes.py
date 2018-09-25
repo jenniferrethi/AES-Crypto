@@ -35,9 +35,11 @@ sbox_inverse = (
             0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
             )
 
+galois_matrix = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 
-def sub_bytes(arr): 
-      for i in range(4): 
+
+def sub_bytes(arr):
+      for i in range(4):
             for j in range(4):
                   val = sbox[arr[i][j]]
                   arr[i][j] = val
@@ -52,18 +54,35 @@ def shift(i, row):
 
 def shift_row(arr):
       for i in range(4):
-            arr[i] = shift(i, arr[i]) 
+            arr[i] = shift(i, arr[i])
       return arr;
+
+# Galois Multiplication
+def galois_multiply(a, b):
+    p = 0
+    hiBitSet = 0
+    for i in range(8):
+        if b & 1 == 1:
+            p ^= a
+        hiBitSet = a & 0x80
+        a <<= 1
+        if hiBitSet == 0x80:
+            a ^= 0x1b
+        b >>= 1
+    return p % 256
+
+def mix_columns(arr):
+
 
 
 def main():
       s = "ABCDEFGHIJKLMNOP"
       b = bytearray()
       b.extend(s.encode())
-      
-      arr = [[0 for x in range(4)] for y in range(4)] 
+
+      arr = [[0 for x in range(4)] for y in range(4)]
       count = 0
-      for i in range(4): 
+      for i in range(4):
             for j in range(4):
                   arr[i][j] = b[count]
                   count+=1
@@ -71,15 +90,10 @@ def main():
 
       arr = sub_bytes(arr)
       print("Sub bytes", arr)
-      
+
       arr = shift_row(arr);
       print("Shift Row", arr)
-     
+
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
