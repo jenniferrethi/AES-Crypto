@@ -197,6 +197,7 @@ def expand_key(key, expandedKeySize):
     # generate the remaining bytes until we get a total key size
     # of 240 bytes
     while i < expandedKeySize:
+      print(i)
       temp[0] = expandedKey[i - 1]
       temp[1] = expandedKey[i - 2]
       temp[2] = expandedKey[i - 3]
@@ -208,15 +209,15 @@ def expand_key(key, expandedKeySize):
         for j in range(4):
           temp[j] = sbox[i]
 
-      for i in range(4):
-        expandedKey.append(expandedKey[i - key_size] ^ temp[i])
+      for k in range(4):
+        expandedKey.append(expandedKey[k - key_size] ^ temp[k])
 
       i = i + 1
             
     return expandedKey
 
 def get_round_key(expandedKey, round_num):
-    return expandedKey[round_num * 16 + 16]
+    return expandedKey[round_num * 16: round_num * 16 + 16]
 
 def add_round_key(arr, round_key):
   count = 0
