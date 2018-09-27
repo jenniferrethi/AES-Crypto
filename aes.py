@@ -35,6 +35,32 @@ sbox_inverse = (
             0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
             )
 
+Rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
+            0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97,
+            0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72,
+            0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66,
+            0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04,
+            0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d,
+            0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3,
+            0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61,
+            0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a,
+            0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
+            0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc,
+            0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5,
+            0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a,
+            0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d,
+            0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c,
+            0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35,
+            0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4,
+            0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc,
+            0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb, 0x8d, 0x01, 0x02, 0x04, 0x08,
+            0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8, 0xab, 0x4d, 0x9a,
+            0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d,
+            0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd, 0x61, 0xc2,
+            0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74,
+            0xe8, 0xcb]
+
+
 gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
@@ -95,51 +121,113 @@ def galois_multiply(a, b):
 
 def matrix_multiplication(column):
       col = column
-      mult = self.galois_multiply
-      column[0] = mult(col[0], gm[0][0]) ^ mult(col[1], gm[0][1]) ^ mult(col[2], gm[0][2]) ^ mult(col[3], gm[0][3])
-      column[1] = mult(col[0], gm[1][0]) ^ mult(col[1], gm[1][1]) ^ mult(col[2], gm[1][2]) ^ mult(col[3], gm[1][3])
-      column[2] = mult(col[0], gm[2][0]) ^ mult(col[1], gm[2][1]) ^ mult(col[2], gm[2][2]) ^ mult(col[3], gm[2][3])
-      column[3] = mult(col[0], gm[3][0]) ^ mult(col[1], gm[3][1]) ^ mult(col[2], gm[3][2]) ^ mult(col[3], gm[3][3])
+      mult = galois_multiply
+      new_col = []
+      new_col.append(mult(col[0], gm[0][0]) ^ mult(col[1], gm[0][1]) ^ mult(col[2], gm[0][2]) ^ mult(col[3], gm[0][3]))
+      new_col.append(mult(col[0], gm[1][0]) ^ mult(col[1], gm[1][1]) ^ mult(col[2], gm[1][2]) ^ mult(col[3], gm[1][3]))
+      new_col.append(mult(col[0], gm[2][0]) ^ mult(col[1], gm[2][1]) ^ mult(col[2], gm[2][2]) ^ mult(col[3], gm[2][3]))
+      new_col.append(mult(col[0], gm[3][0]) ^ mult(col[1], gm[3][1]) ^ mult(col[2], gm[3][2]) ^ mult(col[3], gm[3][3]))
 
-      return column
+      return new_col
 
 
 def mix_columns(arr):
-      int col = 0
+      col = 0
       mixed_columns = []
 
       for col in range(4):
-          column = []
-          mixed_col = []
-          for row in range(4):
-              column.append(arr[row][col])
-              mixed_columns[col] = matrix_multiplication(column)
+            column = []
+            mixed_col = []
+            for row in range(4):
+                  column.append(arr[row][col])
+              
+            mixed_columns.append(matrix_multiplication(column))
 
       return map(list, zip(*mixed_columns))
 
 def matrix_multiplication_inv(column):
 
       col = column
-      mult = self.galois_multiply
-      column[0] = mult(col[0], gm_inv[0][0]) ^ mult(col[1], gm_inv[0][1]) ^ mult(col[2], gm_inv[0][2]) ^ mult(col[3], gm_inv[0][3])
-      column[1] = mult(col[0], gm_inv[1][0]) ^ mult(col[1], gm_inv[1][1]) ^ mult(col[2], gm_inv[1][2]) ^ mult(col[3], gm_inv[1][3])
-      column[2] = mult(col[0], gm_inv[2][0]) ^ mult(col[1], gm_inv[2][1]) ^ mult(col[2], gm_inv[2][2]) ^ mult(col[3], gm_inv[2][3])
-      column[3] = mult(col[0], gm_inv[3][0]) ^ mult(col[1], gm_inv[3][1]) ^ mult(col[2], gm_inv[3][2]) ^ mult(col[3], gm_inv[3][3])
+      mult = galois_multiply
+      new_col = []
+      new_col.append(mult(col[0], gm_inv[0][0]) ^ mult(col[1], gm_inv[0][1]) ^ mult(col[2], gm_inv[0][2]) ^ mult(col[3], gm_inv[0][3]))
+      new_col.append(mult(col[0], gm_inv[1][0]) ^ mult(col[1], gm_inv[1][1]) ^ mult(col[2], gm_inv[1][2]) ^ mult(col[3], gm_inv[1][3]))
+      new_col.append(mult(col[0], gm_inv[2][0]) ^ mult(col[1], gm_inv[2][1]) ^ mult(col[2], gm_inv[2][2]) ^ mult(col[3], gm_inv[2][3]))
+      new_col.append(mult(col[0], gm_inv[3][0]) ^ mult(col[1], gm_inv[3][1]) ^ mult(col[2], gm_inv[3][2]) ^ mult(col[3], gm_inv[3][3]))
 
-      return column
+      return new_col
 
 def mix_columns_inv(arr):
-      int col = 0
+      col = 0
       mixed_columns = []
 
       for col in range(4):
-          column = []
-          mixed_col = []
-          for row in range(4):
-              column.append(arr[row][col])
-              mixed_columns[col] = matrix_multiplication_inv(column)
+            column = []
+            mixed_col = []
+            for row in range(4):
+                  column.append(arr[row][col])
+            mixed_columns.append(matrix_multiplication_inv(column))
 
       return map(list, zip(*mixed_columns))
+
+def rot_and_sub(word):
+  word = word[1:] +word[0:1]
+  for i in range(4):
+        word[i] = sbox[word[i]]
+  word[0] = word[0] ^Rcon[i]  
+  return word
+
+
+
+def expand_key(key, expandedKeySize):
+    key_size = len(key)
+    assert key_size == 32
+    # container for expanded key
+    expandedKey = []
+
+    # temporary list to store 4 bytes at a time
+    i = 0 
+
+    # add original key to the expanded key
+    while (i < key_size) :
+      expandedKey.append(key[i])
+      i = i + 1
+
+    temp = [0, 0, 0, 0]
+    # generate the remaining bytes until we get a total key size
+    # of 240 bytes
+    while i < expandedKeySize:
+      temp[0] = expandedKey[i - 1]
+      temp[1] = expandedKey[i - 2]
+      temp[2] = expandedKey[i - 3]
+      temp[3] = expandedKey[i - 4]
+
+      if i % key_size == 0:
+        temp = rot_and_sub(temp)
+      elif i % key_size == 4:  
+        for j in range(4):
+          temp[j] = sbox[i]
+
+      for i in range(4):
+        expandedKey.append(expandedKey[i - key_size] ^ temp[i])
+
+      i = i + 1
+            
+    return expandedKey
+
+def get_round_key(expandedKey, round_num):
+    return expandedKey[round_num * 16 + 16]
+
+def add_round_key(arr, round_key):
+  count = 0
+  for i in range(4):
+    for j in range(4):
+      arr[i][j] = arr[i][j] ^ round_key[count]
+      count += 1
+
+
+
+
 
 def main():
       s = "ABCDEFGHIJKLMNOP"
@@ -157,8 +245,25 @@ def main():
       arr = sub_bytes(arr)
       print("Sub bytes", arr)
 
-      arr = shift_row(arr);
+      arr = shift_row(arr)
       print("Shift Row", arr)
+
+      arr = mix_columns(arr)
+      print("Mix Columns Row", arr)
+
+      arr = mix_columns_inv(arr)
+      print("Mix Columns Inverse Row", arr)
+
+     
+
+      key = '00000000000000000000000000000000'
+      b = bytearray()
+      b.extend(key.encode())
+      expandedkey = expand_key(b, 128)
+      round_key = get_round_key(expandedkey, 0)
+      arr = add_round_key(arr, round_key)
+      print(arr)
+
 
 
 if __name__ == '__main__':
