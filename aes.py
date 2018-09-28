@@ -67,39 +67,50 @@ gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
 
-def expand_key(key, expandedKeySize):
+def expand_key(key, num_rounds):
     key_size = len(key)
 
     # container for expanded key
-    expandedKey = []
+    expandedKey = [] # should be 11 keys -> for rounds -> each key is 128 bits
     
     # first part of expanded key is the original key
-    for i in range(key_size) :
-        expandedKey.append(key[i])
+    for i in range(4) :
+        list_byte = list(key[i*4 : (i*4) + 4])
+        expandedKey.append(list_byte)
 
-    i = key_size
+    i = 4
 
     temp = [0, 0, 0, 0]
 
-    while i < expandedKeySize:
+    while i < 44:
         
-        temp[0] = expandedKey[i - 4]
-        temp[1] = expandedKey[i - 3]
-        temp[2] = expandedKey[i - 2]
-        temp[3] = expandedKey[i - 1]
+        temp = expandedKey[i-1]
         
-        if i % key_size == 0:
+        if i % 4 == 0:
             temp = rot_and_sub(temp, i)
-        elif i % key_size == 4:
+        
+        elif i % 4 == 4:
             for j in range(4):
                 temp[j] = sbox[i]
 
-        for k in range(4):
-            expandedKey.append(expandedKey[k - key_size] ^ temp[k])
-
+        new_list = []
+        for j in range(4):
+            new_list.append(expandedKey[i-4][j] ^ temp[j])
+        expandedKey.append(new_list)
         i = i + 1
 
+    print(expandedKey)
     return expandedKey
+
+
+def rot_and_sub(word, index):
+    #rotate
+    word = word[1:] + word[0:1]
+    #sub
+    for i in range(4):
+        word[i] = sbox[word[i]]
+    word[0] = word[0] ^ rcon[index/4]
+    return word
 
 
 def sub_bytes(arr):
@@ -207,30 +218,26 @@ def mix_columns_inv(arr):
 
       return map(list, zip(*mixed_columns))
 
-def rot_and_sub(word, index):
-    word = word[1:] + word[0:1]
-    for i in range(4):
-        word[i] = sbox[word[i]]
-    word[0] = word[0] ^ rcon[index/4]
-    return word
-
 def get_round_key(expandedKey, round_num):
-    return expandedKey[round_num * 16: round_num * 16 + 16]
+    key = expandedKey[round_num]
+    print(key)
+    return expandedKey[round_num * 4: round_num * 4 + 4]
 
 def add_round_key(arr, round_key):
     print(round_key)
     count = 0
     for i in range(4):
         for j in range(4):
-          arr[i][j] = arr[i][j] ^ round_key[count]
+          arr[i][j] = arr[i][j] ^ round_key[i][j]
           count += 1
     return arr
 
 def aes_encrypt(arr, key):
     b = bytearray()
-    b.extend(key.encode())
-    expanded_key = expand_key(b, 128)
+    b.extend(map(ord, key))
+    print(b)
     num_rounds = 10
+    expanded_key = expand_key(b, num_rounds)
     encrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -253,8 +260,8 @@ def encrypt_main(arr, expanded_key, num_rounds):
 def aes_decrypt(arr, key):
     b = bytearray()
     b.extend(key.encode())
-    expanded_key = expand_key(b, 128)
     num_rounds = 10
+    expanded_key = expand_key(b, num_rounds)
     decrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -300,6 +307,7 @@ def main():
               count+=1
 
     print("Original", arr)
+    print("Original key", key)
     print("")
     arr = aes_encrypt(arr, key)
     print("encrypted")
