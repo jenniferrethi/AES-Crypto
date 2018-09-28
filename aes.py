@@ -1,3 +1,5 @@
+import sys
+
 sbox = (
             0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
             0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0,
@@ -63,6 +65,41 @@ rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
 
 gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
+
+
+def expand_key(key, expandedKeySize):
+    key_size = len(key)
+
+    # container for expanded key
+    expandedKey = []
+    
+    # first part of expanded key is the original key
+    for i in range(key_size) :
+        expandedKey.append(key[i])
+
+    i = key_size
+
+    temp = [0, 0, 0, 0]
+
+    while i < expandedKeySize:
+        
+        temp[0] = expandedKey[i - 4]
+        temp[1] = expandedKey[i - 3]
+        temp[2] = expandedKey[i - 2]
+        temp[3] = expandedKey[i - 1]
+        
+        if i % key_size == 0:
+            temp = rot_and_sub(temp, i)
+        elif i % key_size == 4:
+            for j in range(4):
+                temp[j] = sbox[i]
+
+        for k in range(4):
+            expandedKey.append(expandedKey[k - key_size] ^ temp[k])
+
+        i = i + 1
+
+    return expandedKey
 
 
 def sub_bytes(arr):
@@ -174,47 +211,14 @@ def rot_and_sub(word, index):
     word = word[1:] + word[0:1]
     for i in range(4):
         word[i] = sbox[word[i]]
-    word[0] = word[0] ^ rcon[index]
+    word[0] = word[0] ^ rcon[index/4]
     return word
-
-def expand_key(key, expandedKeySize):
-    key_size = len(key)
-    assert key_size == 32
-    # container for expanded key
-    expandedKey = []
-    
-    # first part of expanded key is the original key
-    for i in range(key_size) :
-      expandedKey.append(key[i])
-    
-    i = key_size
-
-    temp = [0, 0, 0, 0]
-
-    while i < expandedKeySize:
-    
-        temp[0] = expandedKey[i - 4]
-        temp[1] = expandedKey[i - 3]
-        temp[2] = expandedKey[i - 2]
-        temp[3] = expandedKey[i - 1]
-
-        if i % key_size == 0:
-            temp = rot_and_sub(temp, i)
-        elif i % key_size == 4:
-            for j in range(4):
-                temp[j] = sbox[i]
-
-        for k in range(4):
-            expandedKey.append(expandedKey[k - key_size] ^ temp[k])
-
-        i = i + 1
-
-    return expandedKey
 
 def get_round_key(expandedKey, round_num):
     return expandedKey[round_num * 16: round_num * 16 + 16]
 
 def add_round_key(arr, round_key):
+    print(round_key)
     count = 0
     for i in range(4):
         for j in range(4):
@@ -226,7 +230,7 @@ def aes_encrypt(arr, key):
     b = bytearray()
     b.extend(key.encode())
     expanded_key = expand_key(b, 128)
-    num_rounds = 3
+    num_rounds = 10
     encrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -250,7 +254,7 @@ def aes_decrypt(arr, key):
     b = bytearray()
     b.extend(key.encode())
     expanded_key = expand_key(b, 128)
-    num_rounds = 3
+    num_rounds = 10
     decrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -270,54 +274,52 @@ def decrypt_main(arr, expanded_key, num_rounds):
 
 
 def main():
-      s = "ABCDEFGHIJKLMNOP"
-      b = bytearray()
-      b.extend(s.encode())
 
-      arr = [[0 for x in range(4)] for y in range(4)]
-      count = 0
-      for i in range(4):
-            for j in range(4):
-                  arr[i][j] = b[count]
-                  count+=1
-      key = '00000000000000000000000000000000'
-      print("Original", arr)
-      print("")
-      arr = aes_encrypt(arr, key)
-      print("encrypted")
-      print("")
-      print(arr)
-      print("")
-      arr = aes_decrypt(arr, key)
-      print("decrypted")
-      print("")
-      print(arr)
-#
-#      arr = sub_bytes(arr)
-#      print("Sub bytes", arr)
-#
-#      arr = shift_row(arr)
-#      print("Shift Row", arr)
-#
-#      arr = mix_columns(arr)
-#      print("Mix Columns Row", arr)
-#
-##      arr = mix_columns_inv(arr)
-##      print("Mix Columns Inverse Row", arr)
-#
-#
-#
-#      key = '00000000000000000000000000000000'
-#      b = bytearray()
-#      b.extend(key.encode())
-#      expanded_key = expand_key(b, 128)
-#      print("Expanded Key", expanded_key)
-#      round_key = get_round_key(expanded_key, 0)
-#      print("Round Key", round_key)
-#      arr = add_round_key(arr, round_key)
-#      print(arr)
+    # get command line arguments
+    key_size = sys.argv[2]
+    key_file = sys.argv[4]
+    input_file = sys.argv[6]
+    output_file = sys.argv[8]
+    mode = sys.argv[10]
+    
+    # read from input and key file to get key and plaintext
+    f = open(key_file, "r")
+    key = f.read()
+    f = open(input_file, "r")
+    plaintext = f.read()
+    
+    b = bytearray()
+    b.extend(plaintext.encode())
 
+    # put plaintext into 4x4 matrix
+    arr = [[0 for x in range(4)] for y in range(4)]
+    count = 0
+    for i in range(4):
+        for j in range(4):
+              arr[i][j] = b[count]
+              count+=1
 
+    print("Original", arr)
+    print("")
+    arr = aes_encrypt(arr, key)
+    print("encrypted")
+    print("")
+    print(arr)
+    print("")
+    arr = aes_decrypt(arr, key)
+    print("decrypted")
+    print("")
+    print(arr)
+
+    # put resulting state into string
+    result = ""
+    for i in range(4):
+        for j in range(4):
+            result = result + chr(arr[i][j])
+
+    # write to file
+    f = open(output_file, "w")
+    f.write(result)
 
 if __name__ == '__main__':
     main()
