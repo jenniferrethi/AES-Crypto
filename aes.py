@@ -35,7 +35,7 @@ sbox_inverse = (
             0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26, 0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
             )
 
-Rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
+rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
             0x6c, 0xd8, 0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97,
             0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72,
             0xe4, 0xd3, 0xbd, 0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66,
@@ -170,64 +170,103 @@ def mix_columns_inv(arr):
 
       return map(list, zip(*mixed_columns))
 
-def rot_and_sub(word):
-  word = word[1:] +word[0:1]
-  for i in range(4):
+def rot_and_sub(word, index):
+    word = word[1:] + word[0:1]
+    for i in range(4):
         word[i] = sbox[word[i]]
-  word[0] = word[0] ^Rcon[i]  
-  return word
-
-
+    word[0] = word[0] ^ rcon[index]
+    return word
 
 def expand_key(key, expandedKeySize):
     key_size = len(key)
     assert key_size == 32
     # container for expanded key
     expandedKey = []
-
-    # temporary list to store 4 bytes at a time
-    i = 0 
-
-    # add original key to the expanded key
-    while (i < key_size) :
+    
+    # first part of expanded key is the original key
+    for i in range(key_size) :
       expandedKey.append(key[i])
-      i = i + 1
+    
+    i = key_size
 
     temp = [0, 0, 0, 0]
-    # generate the remaining bytes until we get a total key size
-    # of 240 bytes
+
     while i < expandedKeySize:
-      print(i)
-      temp[0] = expandedKey[i - 1]
-      temp[1] = expandedKey[i - 2]
-      temp[2] = expandedKey[i - 3]
-      temp[3] = expandedKey[i - 4]
+    
+        temp[0] = expandedKey[i - 4]
+        temp[1] = expandedKey[i - 3]
+        temp[2] = expandedKey[i - 2]
+        temp[3] = expandedKey[i - 1]
 
-      if i % key_size == 0:
-        temp = rot_and_sub(temp)
-      elif i % key_size == 4:  
-        for j in range(4):
-          temp[j] = sbox[i]
+        if i % key_size == 0:
+            temp = rot_and_sub(temp, i)
+        elif i % key_size == 4:
+            for j in range(4):
+                temp[j] = sbox[i]
 
-      for k in range(4):
-        expandedKey.append(expandedKey[k - key_size] ^ temp[k])
+        for k in range(4):
+            expandedKey.append(expandedKey[k - key_size] ^ temp[k])
 
-      i = i + 1
-            
+        i = i + 1
+
     return expandedKey
 
 def get_round_key(expandedKey, round_num):
     return expandedKey[round_num * 16: round_num * 16 + 16]
 
 def add_round_key(arr, round_key):
-  count = 0
-  for i in range(4):
-    for j in range(4):
-      arr[i][j] = arr[i][j] ^ round_key[count]
-      count += 1
+    count = 0
+    for i in range(4):
+        for j in range(4):
+          arr[i][j] = arr[i][j] ^ round_key[count]
+          count += 1
+    return arr
 
+def aes_encrypt(arr, key):
+    b = bytearray()
+    b.extend(key.encode())
+    expanded_key = expand_key(b, 128)
+    num_rounds = 3
+    encrypt_main(arr, expanded_key, num_rounds)
+    return arr
 
+def encrypt_main(arr, expanded_key, num_rounds):
+    round_key_og = get_round_key(expanded_key, 0)
+    add_round_key(arr, round_key_og)
+    for i in range(1, num_rounds):
+        round_key = get_round_key(expanded_key, i)
+        sub_bytes(arr)
+        shift_row(arr)
+        mix_columns(arr)
+        add_round_key(arr, round_key)
 
+    # final round don't do mix_columns
+    round_key = get_round_key(expanded_key, num_rounds)
+    sub_bytes(arr)
+    shift_row(arr)
+    add_round_key(arr, round_key)
+
+def aes_decrypt(arr, key):
+    b = bytearray()
+    b.extend(key.encode())
+    expanded_key = expand_key(b, 128)
+    num_rounds = 3
+    decrypt_main(arr, expanded_key, num_rounds)
+    return arr
+
+def decrypt_main(arr, expanded_key, num_rounds):
+    round_key_og = get_round_key(expanded_key, num_rounds)
+    add_round_key(arr, round_key_og)
+    shift_row_inv(arr)
+    sub_bytes_inv(arr)
+    for i in range(num_rounds - 1, 0, -1):
+        round_key = get_round_key(expanded_key, i)
+        add_round_key(arr, round_key)
+        mix_columns_inv(arr)
+        shift_row_inv(arr)
+        sub_bytes_inv(arr)
+    round_key = get_round_key(expanded_key, 0)
+    add_round_key(arr, round_key)
 
 
 def main():
@@ -241,29 +280,42 @@ def main():
             for j in range(4):
                   arr[i][j] = b[count]
                   count+=1
-      print("Original", arr)
-
-      arr = sub_bytes(arr)
-      print("Sub bytes", arr)
-
-      arr = shift_row(arr)
-      print("Shift Row", arr)
-
-      arr = mix_columns(arr)
-      print("Mix Columns Row", arr)
-
-      arr = mix_columns_inv(arr)
-      print("Mix Columns Inverse Row", arr)
-
-     
-
       key = '00000000000000000000000000000000'
-      b = bytearray()
-      b.extend(key.encode())
-      expandedkey = expand_key(b, 128)
-      round_key = get_round_key(expandedkey, 0)
-      arr = add_round_key(arr, round_key)
+      print("Original", arr)
+      print("")
+      arr = aes_encrypt(arr, key)
+      print("encrypted")
+      print("")
       print(arr)
+      print("")
+      arr = aes_decrypt(arr, key)
+      print("decrypted")
+      print("")
+      print(arr)
+#
+#      arr = sub_bytes(arr)
+#      print("Sub bytes", arr)
+#
+#      arr = shift_row(arr)
+#      print("Shift Row", arr)
+#
+#      arr = mix_columns(arr)
+#      print("Mix Columns Row", arr)
+#
+##      arr = mix_columns_inv(arr)
+##      print("Mix Columns Inverse Row", arr)
+#
+#
+#
+#      key = '00000000000000000000000000000000'
+#      b = bytearray()
+#      b.extend(key.encode())
+#      expanded_key = expand_key(b, 128)
+#      print("Expanded Key", expanded_key)
+#      round_key = get_round_key(expanded_key, 0)
+#      print("Round Key", round_key)
+#      arr = add_round_key(arr, round_key)
+#      print(arr)
 
 
 
