@@ -67,35 +67,37 @@ gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
 
-def expand_key(key, num_rounds):
+def expand_key(key, num_rounds, Nk, Nb):
     key_size = len(key)
 
     # container for expanded key
     expandedKey = [] # should be 11 keys -> for rounds -> each key is 128 bits
     
     # first part of expanded key is the original key
-    for i in range(4) :
+    for i in range(Nk) :
         list_byte = list(key[i*4 : (i*4) + 4])
         expandedKey.append(list_byte)
 
-    i = 4
+    i = Nk
 
     temp = [0, 0, 0, 0]
-
-    while i < 44:
+    print(Nb)
+    print(num_rounds)
+    print(Nb * (num_rounds + 1))
+    while i < Nb * (num_rounds + 1):
         
         temp = expandedKey[i-1]
         
-        if i % 4 == 0:
+        if i % Nk == 0:
             temp = rot_and_sub(temp, i)
         
-        elif i % 4 == 4:
+        elif i % Nk == 4:
             for j in range(4):
                 temp[j] = sbox[i]
 
         new_list = []
         for j in range(4):
-            new_list.append(expandedKey[i-4][j] ^ temp[j])
+            new_list.append(expandedKey[i-Nk][j] ^ temp[j])
         expandedKey.append(new_list)
         i = i + 1
 
@@ -232,12 +234,12 @@ def add_round_key(arr, round_key):
           count += 1
     return arr
 
-def aes_encrypt(arr, key):
+def aes_encrypt(arr, key, Nk, Nr, Nb):
     b = bytearray()
     b.extend(map(ord, key))
     print(b)
-    num_rounds = 10
-    expanded_key = expand_key(b, num_rounds)
+    num_rounds = Nr
+    expanded_key = expand_key(b, num_rounds, Nk, Nb)
     encrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -257,11 +259,11 @@ def encrypt_main(arr, expanded_key, num_rounds):
     shift_row(arr)
     add_round_key(arr, round_key)
 
-def aes_decrypt(arr, key):
+def aes_decrypt(arr, key, Nk, Nr, Nb):
     b = bytearray()
     b.extend(key.encode())
-    num_rounds = 10
-    expanded_key = expand_key(b, num_rounds)
+    num_rounds = Nr
+    expanded_key = expand_key(b, num_rounds, Nk, Nb)
     decrypt_main(arr, expanded_key, num_rounds)
     return arr
 
@@ -296,27 +298,39 @@ def main():
     plaintext = f.read()
     
     b = bytearray()
-    b.extend(plaintext.encode())
-
+    b.extend(map(ord, plaintext))
+    
     # put plaintext into 4x4 matrix
     arr = [[0 for x in range(4)] for y in range(4)]
     count = 0
     for i in range(4):
         for j in range(4):
-              arr[i][j] = b[count]
-              count+=1
+            arr[i][j] = b[count]
+            count+=1
+    print(key_size)
+    
+    if key_size == '128':
+        Nk = 4
+        Nr = 10
+        Nb = 4
+    else:
+        Nk = 8
+        Nr = 14
+        Nb = 4
 
     print("Original", arr)
     print("Original key", key)
     print("")
-    arr = aes_encrypt(arr, key)
-    print("encrypted")
-    print("")
-    print(arr)
-    print("")
-    arr = aes_decrypt(arr, key)
-    print("decrypted")
-    print("")
+
+    if mode == 'e':
+        arr = aes_encrypt(arr, key, Nk, Nr, Nb)
+    elif mode == 'd':
+        arr = aes_decrypt(arr, key, Nk, Nr, Nb)
+    else:
+        arr = aes_encrypt(arr, key, Nk, Nr, Nb)
+        arr = aes_decrypt(arr, key, Nk, Nr, Nb)
+
+
     print(arr)
 
     # put resulting state into string
