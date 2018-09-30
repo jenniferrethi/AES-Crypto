@@ -72,7 +72,7 @@ def expand_key(key, num_rounds, Nk, Nb):
 
     # container for expanded key
     expandedKey = [] # should be 11 keys -> for rounds -> each key is 128 bits
-    
+
     # first part of expanded key is the original key
     for i in range(Nk) :
         list_byte = list(key[i*4 : (i*4) + 4])
@@ -85,12 +85,12 @@ def expand_key(key, num_rounds, Nk, Nb):
     print(num_rounds)
     print(Nb * (num_rounds + 1))
     while i < Nb * (num_rounds + 1):
-        
+
         temp = expandedKey[i-1]
-        
+
         if i % Nk == 0:
             temp = rot_and_sub(temp, i)
-        
+
         elif i % Nk == 4:
             for j in range(4):
                 temp[j] = sbox[i]
@@ -190,7 +190,7 @@ def mix_columns(arr):
             mixed_col = []
             for row in range(4):
                   column.append(arr[row][col])
-              
+
             mixed_columns.append(matrix_multiplication(column))
 
       return map(list, zip(*mixed_columns))
@@ -281,6 +281,10 @@ def decrypt_main(arr, expanded_key, num_rounds):
     round_key = get_round_key(expanded_key, 0)
     add_round_key(arr, round_key)
 
+def addPadding(plaintext):
+    length_to_pad = 16 - (len(plaintext) % 16)
+    padding = (chr(length_to_pad) * length_to_pad)
+    return plaintext + padding
 
 def main():
 
@@ -290,16 +294,16 @@ def main():
     input_file = sys.argv[6]
     output_file = sys.argv[8]
     mode = sys.argv[10]
-    
+
     # read from input and key file to get key and plaintext
     f = open(key_file, "r")
     key = f.read()
     f = open(input_file, "r")
-    plaintext = f.read()
-    
+    plaintext = addPadding(f.read())
+
     b = bytearray()
     b.extend(map(ord, plaintext))
-    
+
     # put plaintext into 4x4 matrix
     arr = [[0 for x in range(4)] for y in range(4)]
     count = 0
@@ -308,7 +312,7 @@ def main():
             arr[i][j] = b[count]
             count+=1
     print(key_size)
-    
+
     if key_size == '128':
         Nk = 4
         Nr = 10
