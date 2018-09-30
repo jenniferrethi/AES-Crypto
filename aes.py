@@ -81,17 +81,14 @@ def expand_key(key, num_rounds, Nk, Nb):
     i = Nk
 
     temp = [0, 0, 0, 0]
-    print(Nb)
-    print(num_rounds)
-    print(Nb * (num_rounds + 1))
     while i < Nb * (num_rounds + 1):
 
         temp = expandedKey[i-1]
 
         if i % Nk == 0:
-            temp = rot_and_sub(temp, i)
+            temp = rot_and_sub(temp, i, Nk)
 
-        elif i % Nk == 4:
+        elif Nk > 6 and i % Nk == 4:
             for j in range(4):
                 temp[j] = sbox[i]
 
@@ -105,13 +102,13 @@ def expand_key(key, num_rounds, Nk, Nb):
     return expandedKey
 
 
-def rot_and_sub(word, index):
+def rot_and_sub(word, index, Nk):
     #rotate
     word = word[1:] + word[0:1]
     #sub
     for i in range(4):
         word[i] = sbox[word[i]]
-    word[0] = word[0] ^ rcon[index/4]
+    word[0] = word[0] ^ rcon[index/Nk]
     return word
 
 
@@ -138,8 +135,12 @@ def shift(i, row):
       return new_arr
 
 def shift_row(arr):
+#      tranpose_arr = map(list, zip(*arr))
+#      print(tranpose_arr)
+
       for i in range(4):
             arr[i] = shift(i, arr[i])
+      print(arr)
       return arr;
 
 
@@ -150,6 +151,7 @@ def shift_inv(i, row):
     return new_arr
 
 def shift_row_inv(arr):
+    arr = map(list, zip(*arr))
     for i in range(4):
           arr[i] = shift_inv(i, arr[i])
     return arr;
@@ -182,6 +184,7 @@ def matrix_multiplication(column):
 
 
 def mix_columns(arr):
+#      arr = map(list, zip(*arr))
       col = 0
       mixed_columns = []
 
@@ -190,10 +193,11 @@ def mix_columns(arr):
             mixed_col = []
             for row in range(4):
                   column.append(arr[row][col])
-
             mixed_columns.append(matrix_multiplication(column))
 
-      return map(list, zip(*mixed_columns))
+      print(mixed_columns)
+
+      return mixed_columns
 
 def matrix_multiplication_inv(column):
 
@@ -222,11 +226,9 @@ def mix_columns_inv(arr):
 
 def get_round_key(expandedKey, round_num):
     key = expandedKey[round_num]
-    print(key)
     return expandedKey[round_num * 4: round_num * 4 + 4]
 
 def add_round_key(arr, round_key):
-    print(round_key)
     count = 0
     for i in range(4):
         for j in range(4):
@@ -235,9 +237,7 @@ def add_round_key(arr, round_key):
     return arr
 
 def aes_encrypt(arr, key, Nk, Nr, Nb):
-    b = bytearray()
-    b.extend(map(ord, key))
-    print(b)
+    b = bytearray(key)
     num_rounds = Nr
     expanded_key = expand_key(b, num_rounds, Nk, Nb)
     encrypt_main(arr, expanded_key, num_rounds)
@@ -245,13 +245,18 @@ def aes_encrypt(arr, key, Nk, Nr, Nb):
 
 def encrypt_main(arr, expanded_key, num_rounds):
     round_key_og = get_round_key(expanded_key, 0)
+    print(round_key_og)
     add_round_key(arr, round_key_og)
     for i in range(1, num_rounds):
         round_key = get_round_key(expanded_key, i)
         sub_bytes(arr)
+        print("After subbytes: %s " % i, arr)
         shift_row(arr)
-        mix_columns(arr)
+        print("After shiftrow: %s " % i, arr)
+        arr = mix_columns(arr)
+        print("After mixcol: %s " % i, arr)
         add_round_key(arr, round_key)
+        print("After addround: %s " % i, arr)
 
     # final round don't do mix_columns
     round_key = get_round_key(expanded_key, num_rounds)
@@ -283,7 +288,7 @@ def decrypt_main(arr, expanded_key, num_rounds):
 
 def addPadding(plaintext):
     length_to_pad = 16 - (len(plaintext) % 16)
-    padding = (chr(length_to_pad) * length_to_pad)
+    padding = (bytes(length_to_pad) * length_to_pad)
     return plaintext + padding
 
 def main():
@@ -294,25 +299,8 @@ def main():
     input_file = sys.argv[6]
     output_file = sys.argv[8]
     mode = sys.argv[10]
-
-    # read from input and key file to get key and plaintext
-    f = open(key_file, "r")
-    key = f.read()
-    f = open(input_file, "r")
-    plaintext = addPadding(f.read())
-
-    b = bytearray()
-    b.extend(map(ord, plaintext))
-
-    # put plaintext into 4x4 matrix
-    arr = [[0 for x in range(4)] for y in range(4)]
-    count = 0
-    for i in range(4):
-        for j in range(4):
-            arr[i][j] = b[count]
-            count+=1
-    print(key_size)
-
+    
+    # set constraints
     if key_size == '128':
         Nk = 4
         Nr = 10
@@ -322,30 +310,64 @@ def main():
         Nr = 14
         Nb = 4
 
-    print("Original", arr)
-    print("Original key", key)
-    print("")
+    # read from input and key file to get key and plaintext
+    f = open(key_file, "rb")
+    key = f.read()
+    f = open(input_file, "rb")
+    og_plaintext = f.read()
+    padded_plaintext = addPadding(og_plaintext)
+    
+    index = 0
+    total_len = len(padded_plaintext)
+    result = bytearray()
 
-    if mode == 'e':
-        arr = aes_encrypt(arr, key, Nk, Nr, Nb)
-    elif mode == 'd':
-        arr = aes_decrypt(arr, key, Nk, Nr, Nb)
-    else:
-        arr = aes_encrypt(arr, key, Nk, Nr, Nb)
-        arr = aes_decrypt(arr, key, Nk, Nr, Nb)
+    while (index < total_len):
+        curr_plaintext = padded_plaintext[index : index + 16]
+
+        b = bytearray(curr_plaintext)
+
+        # put plaintext into 4x4 matrix
+        arr = [[0 for x in range(4)] for y in range(4)]
+        count = 0
+        for i in range(4):
+            for j in range(4):
+                arr[i][j] = b[count]
+                count+=1
+#print(key_size)
+
+#print("Original", arr)
 
 
-    print(arr)
+        if mode == 'e':
+            arr = aes_encrypt(arr, key, Nk, Nr, Nb)
+#print(arr)
+        elif mode == 'd':
+            arr = aes_decrypt(arr, key, Nk, Nr, Nb)
+#print(arr)
+        else:
+            arr = aes_encrypt(arr, key, Nk, Nr, Nb)
+            #print(arr)
+            arr = aes_decrypt(arr, key, Nk, Nr, Nb)
+#print(arr)
 
-    # put resulting state into string
-    result = ""
-    for i in range(4):
-        for j in range(4):
-            result = result + chr(arr[i][j])
+        index = index + 16
 
+        # put resulting state into string
+        for i in range(4):
+            for j in range(4):
+                result.append(arr[i][j])
+
+
+    if mode == 'd':
+        padding = len(padded_plaintext) - len(og_plaintext)
+        result = result[0 : len(result) - padding]
+
+    print(result)
     # write to file
     f = open(output_file, "w")
     f.write(result)
+
+
 
 if __name__ == '__main__':
     main()
