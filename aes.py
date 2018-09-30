@@ -143,14 +143,13 @@ def shift(i, row):
       return new_arr
 
 def shift_row(arr):
-#      tranpose_arr = map(list, zip(*arr))
-#      print(tranpose_arr)
-
-      for i in range(4):
-            arr[i] = shift(i, arr[i])
-      print(arr)
-      return arr;
-
+    res_arr = []
+    for i in range(4):
+        temp_col = []
+        for j in range(4):
+            temp_col.append(arr[j][i])
+        res_arr.append(shift(i, temp_col))
+    return map(list, zip(*res_arr));
 
 def shift_inv(i, row):
     last_elems = row[i : len(row)]
@@ -158,16 +157,14 @@ def shift_inv(i, row):
     new_arr = last_elems + first_elems
     return new_arr
 
-def shift_row(arr):
+def shift_row_inv(arr):
     res_arr = []
     for i in range(4):
         temp_col = []
         for j in range(4):
             temp_col.append(arr[j][i])
-        res_arr.append(shift(i, temp_col))
-    #print("SHIFT ROW                             ", res_arr)
+        res_arr.append(shift_inv(i, temp_col))
     return map(list, zip(*res_arr));
-
 
 def galois_multiply(a, b):
     p = 0
@@ -222,6 +219,7 @@ def matrix_multiplication_inv(column):
       return new_col
 
 def mix_columns_inv(arr):
+      arr = map(list, zip(*arr))
       col = 0
       mixed_columns = []
 
@@ -232,7 +230,7 @@ def mix_columns_inv(arr):
                   column.append(arr[row][col])
             mixed_columns.append(matrix_multiplication_inv(column))
 
-      return map(list, zip(*mixed_columns))
+      return mixed_columns
 
 def get_round_key(expandedKey, round_num):
     key = expandedKey[round_num]
@@ -280,22 +278,23 @@ def aes_decrypt(arr, key, Nk, Nr, Nb):
     b.extend(key.encode())
     num_rounds = Nr
     expanded_key = expand_key(b, num_rounds, Nk, Nb)
-    decrypt_main(arr, expanded_key, num_rounds)
+    arr = decrypt_main(arr, expanded_key, num_rounds)
     return arr
 
 def decrypt_main(arr, expanded_key, num_rounds):
     round_key_og = get_round_key(expanded_key, num_rounds)
-    add_round_key(arr, round_key_og)
-    shift_row_inv(arr)
-    sub_bytes_inv(arr)
+    arr = add_round_key(arr, round_key_og)
+    arr = shift_row_inv(arr)
+    arr = sub_bytes_inv(arr)
     for i in range(num_rounds - 1, 0, -1):
         round_key = get_round_key(expanded_key, i)
-        add_round_key(arr, round_key)
-        mix_columns_inv(arr)
-        shift_row_inv(arr)
-        sub_bytes_inv(arr)
+        arr = add_round_key(arr, round_key)
+        arr = mix_columns_inv(arr)
+        arr = shift_row_inv(arr)
+        arr = sub_bytes_inv(arr)
     round_key = get_round_key(expanded_key, 0)
-    add_round_key(arr, round_key)
+    arr = add_round_key(arr, round_key)
+    return arr
 
 def addPadding(plaintext):
     length_to_pad = 16 - (len(plaintext) % 16)
@@ -344,26 +343,17 @@ def main():
             for j in range(4):
                 arr[i][j] = b[count]
                 count+=1
-#print(key_size)
-
-#print("Original", arr)
-
 
         if mode == 'e':
             arr = aes_encrypt(arr, key, Nk, Nr, Nb)
-#print(arr)
         elif mode == 'd':
             arr = aes_decrypt(arr, key, Nk, Nr, Nb)
-#print(arr)
         else:
-            arr = aes_encrypt(arr, key, Nk, Nr, Nb)
-            #print(arr)
             arr = aes_decrypt(arr, key, Nk, Nr, Nb)
-#print(arr)
 
         index = index + 16
 
-        # put resulting state into string
+        # put resulting state into file
         f = open(output_file, "a+")
         for i in range(4):
             for j in range(4):
@@ -374,9 +364,6 @@ def main():
     if mode == 'd':
         padding = len(padded_plaintext) - len(og_plaintext)
         result = result[0 : len(result) - padding]
-
-    print(result)
-    # write to file
 
 
 
