@@ -66,6 +66,14 @@ rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
 gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
+def print_in_hex(arr):
+    hex_arr = []
+    for i in range(4):
+        row = []
+        for j in range(4):
+            row.append(hex(arr[i][j]))
+        hex_arr.append(row)
+    return hex_arr;
 
 def expand_key(key, num_rounds, Nk, Nb):
     key_size = len(key)
@@ -150,11 +158,15 @@ def shift_inv(i, row):
     new_arr = last_elems + first_elems
     return new_arr
 
-def shift_row_inv(arr):
-    arr = map(list, zip(*arr))
+def shift_row(arr):
+    res_arr = []
     for i in range(4):
-          arr[i] = shift_inv(i, arr[i])
-    return arr;
+        temp_col = []
+        for j in range(4):
+            temp_col.append(arr[j][i])
+        res_arr.append(shift(i, temp_col))
+    #print("SHIFT ROW                             ", res_arr)
+    return map(list, zip(*res_arr));
 
 
 def galois_multiply(a, b):
@@ -184,7 +196,7 @@ def matrix_multiplication(column):
 
 
 def mix_columns(arr):
-#      arr = map(list, zip(*arr))
+      arr = map(list, zip(*arr))
       col = 0
       mixed_columns = []
 
@@ -194,8 +206,6 @@ def mix_columns(arr):
             for row in range(4):
                   column.append(arr[row][col])
             mixed_columns.append(matrix_multiplication(column))
-
-      print(mixed_columns)
 
       return mixed_columns
 
@@ -240,7 +250,7 @@ def aes_encrypt(arr, key, Nk, Nr, Nb):
     b = bytearray(key)
     num_rounds = Nr
     expanded_key = expand_key(b, num_rounds, Nk, Nb)
-    encrypt_main(arr, expanded_key, num_rounds)
+    arr = encrypt_main(arr, expanded_key, num_rounds)
     return arr
 
 def encrypt_main(arr, expanded_key, num_rounds):
@@ -249,20 +259,21 @@ def encrypt_main(arr, expanded_key, num_rounds):
     add_round_key(arr, round_key_og)
     for i in range(1, num_rounds):
         round_key = get_round_key(expanded_key, i)
-        sub_bytes(arr)
-        print("After subbytes: %s " % i, arr)
-        shift_row(arr)
-        print("After shiftrow: %s " % i, arr)
+        arr = sub_bytes(arr)
+        print("After subbytes: %s " % i, print_in_hex(arr))
+        arr = shift_row(arr)
+        print("After shiftrow: %s " % i, print_in_hex(arr))
         arr = mix_columns(arr)
-        print("After mixcol: %s " % i, arr)
-        add_round_key(arr, round_key)
-        print("After addround: %s " % i, arr)
+        print("After mixcol: %s " % i, print_in_hex(arr))
+        arr = add_round_key(arr, round_key)
+        print("After addround: %s " % i, print_in_hex(arr))
 
     # final round don't do mix_columns
     round_key = get_round_key(expanded_key, num_rounds)
-    sub_bytes(arr)
-    shift_row(arr)
-    add_round_key(arr, round_key)
+    arr = sub_bytes(arr)
+    arr = shift_row(arr)
+    arr = add_round_key(arr, round_key)
+    return arr
 
 def aes_decrypt(arr, key, Nk, Nr, Nb):
     b = bytearray()
@@ -320,7 +331,7 @@ def main():
     index = 0
     total_len = len(padded_plaintext)
     result = bytearray()
-
+    f = open(output_file, "w")
     while (index < total_len):
         curr_plaintext = padded_plaintext[index : index + 16]
 
@@ -353,9 +364,11 @@ def main():
         index = index + 16
 
         # put resulting state into string
+        f = open(output_file, "a+")
         for i in range(4):
             for j in range(4):
                 result.append(arr[i][j])
+                f.write(hex(arr[i][j]))
 
 
     if mode == 'd':
@@ -364,8 +377,6 @@ def main():
 
     print(result)
     # write to file
-    f = open(output_file, "w")
-    f.write(result)
 
 
 
