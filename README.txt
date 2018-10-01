@@ -8,6 +8,9 @@ HOW TO RUN:
 - To add key, add bytes to key
 - To see output, view output_file.txt
 
+ex:
+python aes.py --keysize 128 --keyfile key --inputfile input_file.txt --outputfile output_file.txt --mode "e"
+
 
 sub_bytes:
 	This method takes each value in your 16 byte 4x4 state and subs it out with the corresponding value in the Sbox matrix. We got this matrix from the internet.
