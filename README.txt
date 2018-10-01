@@ -1,4 +1,4 @@
-Amrutha Sreedarane  :
+Amrutha Sreedarane  : as57286
 Jennifer Rethi      :
 Ruchira Shekar      : rs48939
 
@@ -26,6 +26,47 @@ shift_row:
 shift_row_inv:
 	This method is performed the same way as shift_row however the columns are shifted to the right to perform decyrption.
 
+mix_columns: 
+	This method goes through the columns and then calls the matrix_multiplication method to perform the multiplication.
 
-	
+matrix_multiplication:
+	This method calls the galois_multiply fuction on the column.
 
+galois_multiply:
+	This method performs the exact galois multiplication on the column. We watched a few videos that helped us understand the galois field and how to perform the bit shifts and multiply with the galois field. 
+
+get_round_key:
+	This method returns the round key (the arrays inside the expanded key array) at the necessary indices depending on which round we're on.
+
+add_round_key:
+	This method performs the xoring of each value in the array with the round key values in the expanded key array
+
+aes_encrypt:
+	This method calls the expand key function to build the expanded key array to get the round keys. The function then calls encrypt_main which performs the rounds.
+
+encrypt_main:
+	This method performs the rounds of encryption by calling the sub_bytes, shift_rows, mix_columns, add_round_key functions through the num rounds and then the final round.
+
+aes_decrypt:
+	This method calls the expand key function to build the expanded key array to get the round keys. The function then calls decrypt_main which performs the rounds for decryption.
+
+decrypt_main:
+	This method performs the rounds of decryption by calling the sub_bytes, shift_rows, mix_columns, add_round_key functions through the num rounds and then the final round.
+
+addPadding:
+	This method adds padding so that we are dealing with a length of 16 input at all times. 
+
+main:
+	This method reads from the input files, sets the number of rounds, the size of the input, and number of words values for the expand key function. The method calls the padding functions, and then handles calling the encrypt and decrypt functions. The function also writes to the file.
+
+print_in_hex:
+	This method returns the input array in hex.
+
+print_in_hex:
+	This method returns the expand key in hex.
+
+expand_key:
+	This method creates the expanded key for this key to perform the add round key function. This was explained in the attachment to the project description.
+
+rot_and_sub:
+	This method rotates the word to perform the expand key function and then substitutes it by subbing the byte of the first bit in the word with the Rcon matrix value.

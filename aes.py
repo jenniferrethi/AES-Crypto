@@ -176,18 +176,19 @@ def shift_row_inv(arr):
 	print("SHIFT INV           ", print_in_hex(res_arr))
 	return map(list, zip(*res_arr));
 
-def galois_multiply(a, b):
-	p = 0
-	hiBitSet = 0
-	for i in range(8):
-		if b & 1 == 1:
-			p ^= a
-		hiBitSet = a & 0x80
-		a <<= 1
-		if hiBitSet == 0x80:
-			a ^= 0x1b
-		b >>= 1
-	return p % 256
+def galois_multiply(val1, val2):
+	high_bit = 0
+	product = 0
+	total_count = 4
+	for i in range(total_count*2):
+		if val2 & 1 == 1:
+			product = product ^ val1
+		high_bit = val1 & 0x80
+		val1 <<= 1
+		if high_bit == 0x80:
+			val1 = val1 ^ 0x1b
+		val2 >>= 1
+	return product % 256
 
 
 def matrix_multiplication(column):
