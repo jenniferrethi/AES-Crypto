@@ -115,7 +115,7 @@ def expand_key(key, num_rounds, Nk, Nb):
 		expanded_key.append(new_list)
 		i = i + 1
 
-	print(print_in_hex(expanded_key))
+	# print(print_in_hex(expanded_key))
 	return expanded_key
 
 
@@ -173,7 +173,7 @@ def shift_row_inv(arr):
 		for j in range(4):
 			temp_col.append(arr[j][i])
 		res_arr.append(shift_inv(i, temp_col))
-	print(print_in_hex(res_arr))
+	print("SHIFT INV           ", print_in_hex(res_arr))
 	return map(list, zip(*res_arr));
 
 def galois_multiply(a, b):
@@ -291,24 +291,32 @@ def aes_decrypt(arr, key, Nk, Nr, Nb):
 def decrypt_main(arr, expanded_key, num_rounds):
 	round_key_og = get_round_key(expanded_key, num_rounds)
 	arr = add_round_key(arr, round_key_og)
-	print("After addround d: 10 ", print_in_hex(arr))
+	print("After addround d: 10 ")
+	print(print_in_hex(arr))
 	arr = shift_row_inv(arr)
-	print("After shiftrow d: 10 ", print_in_hex(arr))
+	print("After shiftrow d: 10 ")
+	print(print_in_hex(arr))
 	arr = sub_bytes_inv(arr)
-	print("After subbytes d: 10 ", print_in_hex(arr))
+	print("After subbytes d: 10 ")
+	print(print_in_hex(arr))
 	for i in range(num_rounds - 1, 0, -1):
 		round_key = get_round_key(expanded_key, i)
 		arr = add_round_key(arr, round_key)
-		print("After addround d: %s " % i, print_in_hex(arr))
+		print("After addround d: %s " % i)
+		print(print_in_hex(arr))
 		arr = mix_columns_inv(arr)
-		print("After mixcol d: %s " % i, print_in_hex(arr))
+		print("After mixcol d: %s " % i)
+		print(print_in_hex(arr))
 		arr = shift_row_inv(arr)
-		print("After shiftrow d: %s " % i, print_in_hex(arr))
+		print("After shiftrow d: %s " % i)
+		print(print_in_hex(arr))
 		arr = sub_bytes_inv(arr)
-		print("After subbytes d: %s " % i, print_in_hex(arr))
+		print("After subbytes d: %s " % i)
+		print(print_in_hex(arr))
 	round_key = get_round_key(expanded_key, 0)
 	arr = add_round_key(arr, round_key)
-	print("After addround: 0 ", print_in_hex(arr))
+	print("After addround: 0 ")
+	print(print_in_hex(arr))
 	return arr
 
 def addPadding(plaintext):
@@ -374,7 +382,7 @@ def main():
 		for i in range(4):
 			for j in range(4):
 				result.append(arr[i][j])
-				f.write(hex(arr[i][j]))
+				# f.write(hex(arr[i][j]))
 
 	# unpad for decrypt
 	if mode == 'd':
