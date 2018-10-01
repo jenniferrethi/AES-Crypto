@@ -107,7 +107,7 @@ def expand_key(key, num_rounds, Nk, Nb):
 
 		elif Nk > 6 and i % Nk == 4:
 			for j in range(4):
-				temp[j] = sbox[i]
+				temp[j] = sbox[temp[j]]
 
 		new_list = []
 		for j in range(4):
@@ -161,8 +161,8 @@ def shift_row(arr):
 	return map(list, zip(*res_arr));
 
 def shift_inv(i, row):
-	last_elems = row[i : len(row)]
-	first_elems = row[0 : i]
+	last_elems = row[len(row)- i : len(row)]
+	first_elems = row[0 : len(row)-i]
 	new_arr = last_elems + first_elems
 	return new_arr
 
