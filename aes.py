@@ -382,7 +382,7 @@ def main():
 		for i in range(4):
 			for j in range(4):
 				result.append(arr[i][j])
-				# f.write(hex(arr[i][j]))
+				f.write(hex(arr[i][j]))
 
 	# unpad for decrypt
 	if mode == 'd':
