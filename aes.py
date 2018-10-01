@@ -67,30 +67,6 @@ rcon = [0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
 gm = [[2, 3, 1, 1], [1, 2, 3, 1], [1, 1, 2, 3], [3, 1, 1, 2]]
 gm_inv = [[14, 11, 13, 9], [9, 14, 11, 13], [13, 9, 14, 11], [11, 13, 9, 14]]
 
-def print_in_hex(arr):
-	hex_arr = []
-	for i in range(4):
-		row = []
-		for j in range(4):
-			row.append(hex(arr[i][j]))
-		hex_arr.append(row)
-	return hex_arr;
-
-def print_in_hex(expand_key):
-	arr = []
-	for i in range(len(expand_key)):
-		row = []
-		for j in range(4):
-			row.append(hex(expand_key[i][j]))
-		arr.append(row)
-	return arr
-
-def print_hex_list(l):
-	arr = []
-	for i in range(len(l)):
-		arr.append(hex(l[i]))
-	return arr
-
 def expand_key(key, num_rounds, Nk, Nb):
 	key_size = len(key)
 
@@ -123,7 +99,6 @@ def expand_key(key, num_rounds, Nk, Nb):
 		expanded_key.append(new_list)
 		
 		i = i + 1
-	print print_in_hex(expanded_key)
 	return expanded_key
 
 
@@ -268,28 +243,19 @@ def aes_encrypt(arr, key, Nk, Nr, Nb):
 
 def encrypt_main(arr, expanded_key, num_rounds):
 	round_key_og = get_round_key(expanded_key, 0)
-	print "first round key", round_key_og
 	add_round_key(arr, round_key_og)
-	print("After addround: 0 ", print_in_hex(arr))
 	for i in range(1, num_rounds):
 		round_key = get_round_key(expanded_key, i)
 		arr = sub_bytes(arr)
-		print("After subbytes: %s " % i, print_in_hex(arr))
 		arr = shift_row(arr)
-		print("After shiftrow: %s " % i, print_in_hex(arr))
 		arr = mix_columns(arr)
-		print("After mixcol: %s " % i, print_in_hex(arr))
 		arr = add_round_key(arr, round_key)
-		print("After addround: %s " % i, print_in_hex(arr))
 
 	# final round don't do mix_columns
 	round_key = get_round_key(expanded_key, num_rounds)
 	arr = sub_bytes(arr)
-	print("After subbytes: 10 ", print_in_hex(arr))
 	arr = shift_row(arr)
-	print("After shiftrow: 10 ", print_in_hex(arr))
 	arr = add_round_key(arr, round_key)
-	print("After addround: 10 ", print_in_hex(arr))
 	return arr
 
 def aes_decrypt(arr, key, Nk, Nr, Nb):
@@ -303,32 +269,16 @@ def aes_decrypt(arr, key, Nk, Nr, Nb):
 def decrypt_main(arr, expanded_key, num_rounds):
 	round_key_og = get_round_key(expanded_key, num_rounds)
 	arr = add_round_key(arr, round_key_og)
-	print("After addround d: 10 ")
-	print(print_in_hex(arr))
 	arr = shift_row_inv(arr)
-	print("After shiftrow d: 10 ")
-	print(print_in_hex(arr))
 	arr = sub_bytes_inv(arr)
-	print("After subbytes d: 10 ")
-	print(print_in_hex(arr))
 	for i in range(num_rounds - 1, 0, -1):
 		round_key = get_round_key(expanded_key, i)
 		arr = add_round_key(arr, round_key)
-		print("After addround d: %s " % i)
-		print(print_in_hex(arr))
 		arr = mix_columns_inv(arr)
-		print("After mixcol d: %s " % i)
-		print(print_in_hex(arr))
 		arr = shift_row_inv(arr)
-		print("After shiftrow d: %s " % i)
-		print(print_in_hex(arr))
 		arr = sub_bytes_inv(arr)
-		print("After subbytes d: %s " % i)
-		print(print_in_hex(arr))
 	round_key = get_round_key(expanded_key, 0)
 	arr = add_round_key(arr, round_key)
-	print("After addround: 0 ")
-	print(print_in_hex(arr))
 	return arr
 
 def addPadding(plaintext):
@@ -360,12 +310,10 @@ def main():
 	key = f.read()
 	f = open(input_file, "rb")
 	og_plaintext = f.read()
-	#og_plaintext = '00112233445566778899AABBCCDDEEFF'
 	padded_plaintext = addPadding(og_plaintext)
 	
 	index = 0
 	total_len = len(padded_plaintext)
-	result = bytearray()
 	f = open(output_file, "wb")
 	while (index < total_len):
 		curr_plaintext = padded_plaintext[index : index + 16]
@@ -384,9 +332,6 @@ def main():
 			arr = aes_encrypt(arr, key, Nk, Nr, Nb)
 		elif mode == 'd':
 			arr = aes_decrypt(arr, key, Nk, Nr, Nb)
-		else:
-			arr = aes_encrypt(arr, key, Nk, Nr, Nb)
-			arr = aes_decrypt(arr, key, Nk, Nr, Nb)
 
 		index = index + 16
 
@@ -394,13 +339,8 @@ def main():
 		f = open(output_file, "a+")
 		for i in range(4):
 			for j in range(4):
-				result.append(arr[i][j])
-				f.write(hex(arr[i][j]))
-
-	# unpad for decrypt
-	if mode == 'd':
-		padding = len(padded_plaintext) - len(og_plaintext)
-		result = result[0 : len(result) - padding]
+				#f.write(hex(arr[i][j]))
+				f.write(chr(arr[i][j]))
 
 
 
